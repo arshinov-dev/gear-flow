@@ -1,0 +1,78 @@
+{% extends "admin/base_site.html" %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    .print-actions {
+      margin: 0 0 16px;
+    }
+
+    .label-sheet {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(30mm, 1fr));
+      gap: 4mm;
+      max-width: 190mm;
+    }
+
+    .qr-label {
+      width: 30mm;
+      height: 24mm;
+      box-sizing: border-box;
+      border: 1px dashed #9aa4b2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2mm;
+      page-break-inside: avoid;
+      background: #fff;
+    }
+
+    .qr-label img {
+      width: 17mm;
+      height: 17mm;
+      display: block;
+    }
+
+    .qr-label strong {
+      display: block;
+      margin-top: 1mm;
+      font: 700 8pt/1.1 system-ui, sans-serif;
+      color: #111827;
+    }
+
+    @media print {
+      #header,
+      .breadcrumbs,
+      .print-actions,
+      .object-tools {
+        display: none !important;
+      }
+
+      #content {
+        margin: 0;
+        padding: 0;
+      }
+
+      .label-sheet {
+        gap: 3mm;
+      }
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="print-actions">
+    <button type="button" class="button default" onclick="window.print()">Печать</button>
+    <a href="{% url 'admin:inventory_qrprintbatch_change' batch.pk %}" class="button">Вернуться к пакету</a>
+  </div>
+
+  <div class="label-sheet">
+    {% for item in items %}
+      <div class="qr-label">
+        <img src="{{ item.data_uri }}" alt="{{ item.qr_code.label_text }}">
+        <strong>{{ item.qr_code.label_text }}</strong>
+      </div>
+    {% endfor %}
+  </div>
+{% endblock %}

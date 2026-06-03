@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}Gear Flow{% endblock %}</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f4f6f8;
+      --text: #17202a;
+      --muted: #64707d;
+      --panel: #fff;
+      --border: #d7dde3;
+      --primary: #1657d9;
+      --danger: #b42318;
+      --ok: #18794e;
+      --warning: #9a6700;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+      margin: 0;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    main {
+      max-width: 760px;
+      margin: 0 auto;
+      padding: 16px;
+    }
+
+    h1, h2, p { margin-top: 0; }
+    h1 { font-size: clamp(1.55rem, 4vw, 2.2rem); line-height: 1.08; }
+    h2 { font-size: 1.1rem; }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 16px;
+      margin: 14px 0;
+    }
+
+    .hero {
+      padding: 18px;
+    }
+
+    .muted { color: var(--muted); }
+    .meta { display: grid; gap: 8px; margin: 14px 0 0; }
+    .meta-row { display: flex; justify-content: space-between; gap: 16px; border-top: 1px solid #edf0f3; padding-top: 8px; }
+    .meta-row span:first-child { color: var(--muted); }
+    .status { display: inline-flex; align-items: center; min-height: 28px; padding: 4px 8px; border-radius: 999px; font-size: .9rem; font-weight: 700; }
+    .status-ok { background: #eaf7ef; color: var(--ok); }
+    .status-busy { background: #fff4d8; color: var(--warning); }
+    .status-stop { background: #fdecec; color: var(--danger); }
+
+    label { display: block; font-weight: 650; margin: 12px 0 6px; }
+    input, select, textarea {
+      width: 100%;
+      min-height: 44px;
+      padding: 10px 11px;
+      border: 1px solid #b8c0c8;
+      border-radius: 6px;
+      font: inherit;
+      background: #fff;
+    }
+
+    input[type="checkbox"] {
+      width: auto;
+      min-height: auto;
+      margin-right: 8px;
+    }
+
+    button, .button-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 44px;
+      margin-top: 14px;
+      padding: 10px 14px;
+      border: 0;
+      border-radius: 6px;
+      background: var(--primary);
+      color: #fff;
+      font-weight: 700;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .button-secondary { background: #4b5563; }
+    .messages { list-style: none; padding: 0; margin: 0 0 12px; }
+    .messages li { padding: 10px 12px; border-radius: 6px; margin: 8px 0; background: #e8f0fe; }
+    .errorlist { color: var(--danger); padding-left: 18px; }
+    details { margin-top: 12px; border-top: 1px solid #edf0f3; padding-top: 12px; }
+    summary { cursor: pointer; font-weight: 700; }
+
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; border-bottom: 1px solid #e3e8ee; padding: 10px 8px; vertical-align: top; }
+
+    @media (max-width: 560px) {
+      main { padding: 10px; }
+      .panel { padding: 14px; margin: 10px 0; }
+      .meta-row { display: grid; gap: 2px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    {% if messages %}
+      <ul class="messages">
+        {% for message in messages %}
+          <li>{{ message }}</li>
+        {% endfor %}
+      </ul>
+    {% endif %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

@@ -1,0 +1,35 @@
+{% extends "inventory/base.html" %}
+
+{% block title %}Просрочки · Gear Flow{% endblock %}
+
+{% block content %}
+  <section class="panel">
+    <h1>Просроченное оборудование</h1>
+    {% if rows %}
+      <table>
+        <thead>
+          <tr>
+            <th>Предмет</th>
+            <th>Кто взял</th>
+            <th>Дата возврата</th>
+            <th>Дней просрочки</th>
+            <th>Причина</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in rows %}
+            <tr>
+              <td>{{ row.state.item.item_id }} · {{ row.state.item.name }}</td>
+              <td>{{ row.state.holder.name }}</td>
+              <td>{{ row.state.due_on }}</td>
+              <td>{{ row.days_overdue }}</td>
+              <td>{{ row.state.checkout_reason }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p>Просрочек нет.</p>
+    {% endif %}
+  </section>
+{% endblock %}

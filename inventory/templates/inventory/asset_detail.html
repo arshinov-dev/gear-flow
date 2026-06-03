@@ -1,0 +1,120 @@
+{% extends "inventory/base.html" %}
+
+{% block title %}{{ asset.item_id }} · Gear Flow{% endblock %}
+
+{% block content %}
+  <section class="panel hero">
+    <p class="muted">{{ asset.item_id }}</p>
+    <h1>{{ asset.name }}</h1>
+    {% if can_checkout %}
+      <span class="status status-ok">Можно взять</span>
+    {% elif can_return %}
+      <span class="status status-busy">На руках</span>
+    {% else %}
+      <span class="status status-stop">Недоступно для самовыдачи</span>
+    {% endif %}
+
+    <div class="meta">
+      <div class="meta-row">
+        <span>Тип</span>
+        <strong>{{ asset.asset_type }}</strong>
+      </div>
+      <div class="meta-row">
+        <span>Текущий держатель</span>
+        <strong>{{ state.holder.name }}</strong>
+      </div>
+      <div class="meta-row">
+        <span>Состояние</span>
+        <strong>{{ state.get_condition_display }}</strong>
+      </div>
+      {% if state.due_on %}
+        <div class="meta-row">
+          <span>Вернуть до</span>
+          <strong>{{ state.due_on }}</strong>
+        </div>
+        <div class="meta-row">
+          <span>Причина</span>
+          <strong>{{ state.checkout_reason }}</strong>
+        </div>
+      {% endif %}
+    </div>
+  </section>
+
+  {% if can_checkout %}
+    <section class="panel">
+      <h2>Взять оборудование</h2>
+      <form method="post" enctype="multipart/form-data" action="{% url 'inventory:checkout_asset' asset.item_id %}">
+        {% csrf_token %}
+        {{ checkout_form.non_field_errors }}
+
+        {{ checkout_form.person.errors }}
+        {{ checkout_form.person.label_tag }}
+        {{ checkout_form.person }}
+
+        {{ checkout_form.pin.errors }}
+        {{ checkout_form.pin.label_tag }}
+        {{ checkout_form.pin }}
+
+        {{ checkout_form.due_on.errors }}
+        {{ checkout_form.due_on.label_tag }}
+        {{ checkout_form.due_on }}
+
+        {{ checkout_form.reason.errors }}
+        {{ checkout_form.reason.label_tag }}
+        {{ checkout_form.reason }}
+
+        <details>
+          <summary>Отметить проблему</summary>
+          <label>{{ checkout_form.has_problem }} {{ checkout_form.has_problem.label }}</label>
+          {{ checkout_form.condition_after.errors }}
+          {{ checkout_form.condition_after.label_tag }}
+          {{ checkout_form.condition_after }}
+          {{ checkout_form.problem_photo.errors }}
+          {{ checkout_form.problem_photo.label_tag }}
+          {{ checkout_form.problem_photo }}
+        </details>
+
+        <button type="submit">Взять</button>
+      </form>
+    </section>
+  {% elif can_return %}
+    <section class="panel">
+      <h2>Вернуть оборудование</h2>
+      <form method="post" enctype="multipart/form-data" action="{% url 'inventory:return_asset' asset.item_id %}">
+        {% csrf_token %}
+        {{ return_form.non_field_errors }}
+
+        {{ return_form.person.errors }}
+        {{ return_form.person.label_tag }}
+        {{ return_form.person }}
+
+        {{ return_form.pin.errors }}
+        {{ return_form.pin.label_tag }}
+        {{ return_form.pin }}
+
+        {{ return_form.to_holder.errors }}
+        {{ return_form.to_holder.label_tag }}
+        {{ return_form.to_holder }}
+
+        <details>
+          <summary>Отметить проблему</summary>
+          <label>{{ return_form.has_problem }} {{ return_form.has_problem.label }}</label>
+          {{ return_form.condition_after.errors }}
+          {{ return_form.condition_after.label_tag }}
+          {{ return_form.condition_after }}
+          {{ return_form.problem_photo.errors }}
+          {{ return_form.problem_photo.label_tag }}
+          {{ return_form.problem_photo }}
+        </details>
+
+        <button type="submit">Вернуть</button>
+      </form>
+    </section>
+  {% else %}
+    <section class="panel">
+      <h2>Самообслуживание недоступно</h2>
+      <p class="muted">Объект нельзя взять или вернуть без ответственного. Если физическое состояние отличается от системы, нужен аудит или коррекция.</p>
+      <a class="button-link button-secondary" href="/admin/">Открыть админку</a>
+    </section>
+  {% endif %}
+{% endblock %}
