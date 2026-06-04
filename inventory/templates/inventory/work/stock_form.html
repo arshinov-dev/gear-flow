@@ -1,0 +1,38 @@
+{% extends "inventory/work/base.html" %}
+
+{% block title %}{{ title }}: {{ sku.sku_id }}{% endblock %}
+
+{% block work_content %}
+  <section class="panel hero">
+    <p class="muted">{{ sku.sku_id }}</p>
+    <h1>{{ title }}</h1>
+    <p class="muted">{{ sku.name }}</p>
+  </section>
+
+  <section class="panel">
+    <div class="section-head">
+      <div>
+        <h2>Данные операции</h2>
+        <p class="help-text">Операция изменит остатки и останется в истории событий мерча.</p>
+      </div>
+    </div>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+
+      {% for field in form %}
+        {{ field.errors }}
+        {{ field.label_tag }}
+        {{ field }}
+        {% if field.help_text %}
+          <p class="help-text">{{ field.help_text }}</p>
+        {% endif %}
+      {% endfor %}
+
+      <div class="action-row">
+        <button type="submit">Записать</button>
+        <a class="button-link button-secondary" href="{% url 'inventory:work_stock' %}">Назад</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

@@ -1,0 +1,127 @@
+{% extends "inventory/base.html" %}
+
+{% block title %}{{ kit.kit_id }} · Gear Flow{% endblock %}
+
+{% block content %}
+  <section class="panel hero">
+    <p class="muted">{{ kit.kit_id }}</p>
+    <h1>{{ kit.name }}</h1>
+    {% if can_checkout %}
+      <span class="status status-ok">Можно взять комплект</span>
+    {% elif can_return %}
+      <span class="status status-busy">Комплект на руках</span>
+    {% else %}
+      <span class="status status-stop">Комплект требует ответственного</span>
+    {% endif %}
+
+    {% if kit.description %}
+      <p class="muted">{{ kit.description }}</p>
+    {% endif %}
+  </section>
+
+  <section class="panel">
+    <h2>Состав комплекта</h2>
+    {% if rows %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Предмет</th>
+              <th>Где сейчас</th>
+              <th>Состояние</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+              <tr>
+                <td><strong>{{ row.kit_item.item.item_id }}</strong> · {{ row.kit_item.item.name }}</td>
+                <td>{% if row.state %}{{ row.state.holder.name }}{% else %}-{% endif %}</td>
+                <td>{% if row.state %}{{ row.state.get_condition_display }}{% else %}-{% endif %}</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="empty-state">В комплект пока не добавлено оборудование.</p>
+    {% endif %}
+  </section>
+
+  {% if can_checkout %}
+    <section class="panel">
+      <h2>Взять комплект</h2>
+      <form method="post" enctype="multipart/form-data" action="{% url 'inventory:checkout_kit' kit.kit_id %}">
+        {% csrf_token %}
+        {{ checkout_form.non_field_errors }}
+
+        {{ checkout_form.person.errors }}
+        {{ checkout_form.person.label_tag }}
+        {{ checkout_form.person }}
+
+        {{ checkout_form.pin.errors }}
+        {{ checkout_form.pin.label_tag }}
+        {{ checkout_form.pin }}
+
+        {{ checkout_form.due_on.errors }}
+        {{ checkout_form.due_on.label_tag }}
+        {{ checkout_form.due_on }}
+
+        {{ checkout_form.reason.errors }}
+        {{ checkout_form.reason.label_tag }}
+        {{ checkout_form.reason }}
+
+        <details>
+          <summary>Отметить проблему для всего комплекта</summary>
+          <label>{{ checkout_form.has_problem }} {{ checkout_form.has_problem.label }}</label>
+          {{ checkout_form.condition_after.errors }}
+          {{ checkout_form.condition_after.label_tag }}
+          {{ checkout_form.condition_after }}
+          {{ checkout_form.problem_photo.errors }}
+          {{ checkout_form.problem_photo.label_tag }}
+          {{ checkout_form.problem_photo }}
+        </details>
+
+        <button type="submit">Взять комплект</button>
+      </form>
+    </section>
+  {% elif can_return %}
+    <section class="panel">
+      <h2>Вернуть комплект</h2>
+      <form method="post" enctype="multipart/form-data" action="{% url 'inventory:return_kit' kit.kit_id %}">
+        {% csrf_token %}
+        {{ return_form.non_field_errors }}
+
+        {{ return_form.person.errors }}
+        {{ return_form.person.label_tag }}
+        {{ return_form.person }}
+
+        {{ return_form.pin.errors }}
+        {{ return_form.pin.label_tag }}
+        {{ return_form.pin }}
+
+        {{ return_form.to_holder.errors }}
+        {{ return_form.to_holder.label_tag }}
+        {{ return_form.to_holder }}
+
+        <details>
+          <summary>Отметить проблему для всего комплекта</summary>
+          <label>{{ return_form.has_problem }} {{ return_form.has_problem.label }}</label>
+          {{ return_form.condition_after.errors }}
+          {{ return_form.condition_after.label_tag }}
+          {{ return_form.condition_after }}
+          {{ return_form.problem_photo.errors }}
+          {{ return_form.problem_photo.label_tag }}
+          {{ return_form.problem_photo }}
+        </details>
+
+        <button type="submit">Вернуть комплект</button>
+      </form>
+    </section>
+  {% else %}
+    <section class="panel">
+      <h2>Нужен ответственный</h2>
+      <p class="muted">Комплект нельзя выдать или вернуть одним QR, если один из предметов недоступен, уже у другого человека или состав разошелся.</p>
+      <a class="button-link button-secondary" href="/admin/">Открыть админку</a>
+    </section>
+  {% endif %}
+{% endblock %}

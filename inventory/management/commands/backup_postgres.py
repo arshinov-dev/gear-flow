@@ -18,7 +18,7 @@ class Command(BaseCommand):
         parser.add_argument(
             "--keep",
             type=int,
-            default=int(os.getenv("GEARFLOW_BACKUP_KEEP", "3")),
+            default=int(os.getenv("GEARFLOW_BACKUP_KEEP", "7")),
             help="Number of latest backup files to keep.",
         )
 

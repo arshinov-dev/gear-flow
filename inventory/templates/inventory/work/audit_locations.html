@@ -1,0 +1,29 @@
+{% extends "inventory/work/base.html" %}
+
+{% block title %}Аудит оборудования{% endblock %}
+
+{% block work_content %}
+  <section class="panel hero">
+    <h1>Аудит оборудования</h1>
+    <p class="muted">Выберите место хранения для проверки.</p>
+  </section>
+
+  <section class="panel">
+    <div class="section-head">
+      <h2>Места хранения</h2>
+      <span class="badge badge-neutral">{{ locations|length }} активных</span>
+    </div>
+    {% if locations %}
+      <div class="list-links">
+        {% for location in locations %}
+          <a class="list-link" href="{% url 'inventory:work_audit_location' location.pk %}">
+            <strong>{{ location.name }}</strong>
+            <span class="muted">{{ location.current_assets.count }} предметов</span>
+          </a>
+        {% endfor %}
+      </div>
+    {% else %}
+      <p class="empty-state">Активных мест хранения нет.</p>
+    {% endif %}
+  </section>
+{% endblock %}

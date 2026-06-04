@@ -1,0 +1,18 @@
+{% extends "inventory/base.html" %}
+
+{% block content %}
+  <div class="topbar">
+    <nav>
+      <a href="{% url 'inventory:work_dashboard' %}">Рабочий кабинет</a>
+      <a href="{% url 'inventory:work_assets' %}">Оборудование</a>
+      <a href="{% url 'inventory:work_kits' %}">Комплекты</a>
+      <a href="{% url 'inventory:work_audit_locations' %}">Аудит</a>
+      <a href="{% url 'inventory:work_stock' %}">Мерч</a>
+      <a href="{% url 'inventory:work_overdue' %}">Просрочки</a>
+    </nav>
+    {% if manager %}
+      <a href="{% url 'inventory:work_logout' %}">Выйти: {{ manager.display_name }}</a>
+    {% endif %}
+  </div>
+  {% block work_content %}{% endblock %}
+{% endblock %}

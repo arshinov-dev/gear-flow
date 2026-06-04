@@ -1,0 +1,69 @@
+{% extends "inventory/work/base.html" %}
+
+{% block title %}Действие: {{ asset.item_id }}{% endblock %}
+
+{% block work_content %}
+  <section class="panel hero">
+    <p class="muted">{{ asset.item_id }}</p>
+    <h1>{{ asset.name }}</h1>
+    <div class="meta">
+      <div class="meta-row">
+        <span>Где сейчас</span>
+        <strong>{{ state.holder.name }}</strong>
+      </div>
+      <div class="meta-row">
+        <span>Состояние</span>
+        <strong>
+          {% if state.condition == "working" %}
+            <span class="badge badge-ok">{{ state.get_condition_display }}</span>
+          {% elif state.condition == "needs_attention" or state.condition == "unknown" %}
+            <span class="badge badge-warning">{{ state.get_condition_display }}</span>
+          {% else %}
+            <span class="badge badge-danger">{{ state.get_condition_display }}</span>
+          {% endif %}
+        </strong>
+      </div>
+      <div class="meta-row">
+        <span>Статус</span>
+        <strong>
+          {% if state.lifecycle_status == "active" %}
+            <span class="badge badge-ok">{{ state.get_lifecycle_status_display }}</span>
+          {% elif state.lifecycle_status == "repair" %}
+            <span class="badge badge-warning">{{ state.get_lifecycle_status_display }}</span>
+          {% else %}
+            <span class="badge badge-danger">{{ state.get_lifecycle_status_display }}</span>
+          {% endif %}
+        </strong>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel">
+    <div class="section-head">
+      <div>
+        <h2>Записать действие</h2>
+        <p class="help-text">Все изменения попадут в журнал событий и обновят текущее состояние предмета.</p>
+      </div>
+    </div>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+
+      {% for field in form %}
+        {{ field.errors }}
+        {{ field.label_tag }}
+        {{ field }}
+        {% if field.name == "holder" %}
+          <p class="help-text">Для ремонта выберите внешнего держателя, для возврата из ремонта - место хранения.</p>
+        {% elif field.name == "lifecycle_status" %}
+          <p class="help-text">При обычной коррекции можно оставить статус без изменений.</p>
+        {% endif %}
+      {% endfor %}
+
+      <div class="action-row">
+        <button type="submit">Записать</button>
+        <a class="button-link button-secondary" href="{% url 'inventory:work_assets' %}">Назад</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

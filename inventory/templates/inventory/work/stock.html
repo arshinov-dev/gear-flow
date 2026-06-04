@@ -1,0 +1,69 @@
+{% extends "inventory/work/base.html" %}
+
+{% block title %}Мерч{% endblock %}
+
+{% block work_content %}
+  <section class="panel hero">
+    <h1>Мерч</h1>
+    <p class="muted">Остатки по SKU без QR-кодов: поступления, перемещения, выдачи и корректировки.</p>
+  </section>
+
+  <section class="panel">
+    <div class="section-head">
+      <div>
+        <h2>Остатки</h2>
+        <p class="help-text">SKU можно оставить пустым при создании, если отдельный артикул не нужен.</p>
+      </div>
+      <span class="badge badge-neutral">{{ skus|length }} позиций</span>
+    </div>
+    {% if skus %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>SKU</th>
+              <th>Название</th>
+              <th>Остаток</th>
+              <th>Где лежит</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sku in skus %}
+              <tr>
+                <td><strong>{{ sku.sku_id }}</strong></td>
+                <td>{{ sku.name }}</td>
+                <td>
+                  {% if sku.total_quantity %}
+                    <span class="badge badge-ok">{{ sku.total_quantity }} {{ sku.unit }}</span>
+                  {% else %}
+                    <span class="badge badge-warning">0 {{ sku.unit }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% for balance in sku.balances.all %}
+                    {% if balance.quantity %}
+                      <div>{{ balance.holder.name }}: {{ balance.quantity }} {{ sku.unit }}</div>
+                    {% endif %}
+                  {% empty %}
+                    <span class="muted">Нет остатков</span>
+                  {% endfor %}
+                </td>
+                <td class="cell-actions">
+                  <div class="action-row">
+                    <a class="button-link" href="{% url 'inventory:work_stock_receive' sku.pk %}">Принять</a>
+                    <a class="button-link button-secondary" href="{% url 'inventory:work_stock_move' sku.pk %}">Переместить</a>
+                    <a class="button-link button-secondary" href="{% url 'inventory:work_stock_issue' sku.pk %}">Выдать</a>
+                    <a class="button-link button-secondary" href="{% url 'inventory:work_stock_adjust' sku.pk %}">Коррекция</a>
+                  </div>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="empty-state">Мерч пока не создан. SKU создаются в админке.</p>
+    {% endif %}
+  </section>
+{% endblock %}

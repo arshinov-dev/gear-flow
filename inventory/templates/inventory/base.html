@@ -7,15 +7,19 @@
   <style>
     :root {
       color-scheme: light;
-      --bg: #f4f6f8;
-      --text: #17202a;
-      --muted: #64707d;
+      --bg: #f6f7f9;
+      --text: #1b2430;
+      --muted: #687386;
       --panel: #fff;
-      --border: #d7dde3;
-      --primary: #1657d9;
+      --border: #d9dee7;
+      --primary: #155bd5;
       --danger: #b42318;
       --ok: #18794e;
       --warning: #9a6700;
+      --info: #155bd5;
+      --surface: #eef2f6;
+      --surface-2: #f9fbfd;
+      --shadow: 0 1px 2px rgba(17, 24, 39, .05);
     }
 
     * { box-sizing: border-box; }
@@ -25,31 +29,36 @@
       margin: 0;
       background: var(--bg);
       color: var(--text);
+      line-height: 1.45;
     }
 
     main {
-      max-width: 760px;
+      max-width: 1080px;
       margin: 0 auto;
-      padding: 16px;
+      padding: 20px;
     }
 
     h1, h2, p { margin-top: 0; }
-    h1 { font-size: clamp(1.55rem, 4vw, 2.2rem); line-height: 1.08; }
-    h2 { font-size: 1.1rem; }
+    h1 { font-size: 2rem; line-height: 1.12; margin-bottom: 8px; }
+    h2 { font-size: 1.12rem; margin-bottom: 12px; }
+    a { color: var(--primary); }
 
     .panel {
       background: var(--panel);
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 16px;
-      margin: 14px 0;
+      box-shadow: var(--shadow);
+      padding: 18px;
+      margin: 16px 0;
     }
 
     .hero {
-      padding: 18px;
+      padding: 20px;
+      border-left: 4px solid var(--primary);
     }
 
     .muted { color: var(--muted); }
+    .help-text { color: var(--muted); font-size: .92rem; margin: 6px 0 0; }
     .meta { display: grid; gap: 8px; margin: 14px 0 0; }
     .meta-row { display: flex; justify-content: space-between; gap: 16px; border-top: 1px solid #edf0f3; padding-top: 8px; }
     .meta-row span:first-child { color: var(--muted); }
@@ -57,6 +66,13 @@
     .status-ok { background: #eaf7ef; color: var(--ok); }
     .status-busy { background: #fff4d8; color: var(--warning); }
     .status-stop { background: #fdecec; color: var(--danger); }
+    .pill { display: inline-flex; align-items: center; min-height: 26px; padding: 3px 8px; border-radius: 999px; background: var(--surface); color: var(--text); font-size: .86rem; font-weight: 700; }
+    .badge { display: inline-flex; align-items: center; min-height: 24px; padding: 3px 8px; border-radius: 999px; font-size: .82rem; font-weight: 700; white-space: nowrap; }
+    .badge-ok { background: #eaf7ef; color: var(--ok); }
+    .badge-warning { background: #fff4d8; color: var(--warning); }
+    .badge-danger { background: #fdecec; color: var(--danger); }
+    .badge-neutral { background: var(--surface); color: var(--text); }
+    .badge-info { background: #eaf0ff; color: var(--info); }
 
     label { display: block; font-weight: 650; margin: 12px 0 6px; }
     input, select, textarea {
@@ -68,6 +84,7 @@
       font: inherit;
       background: #fff;
     }
+    input:focus, select:focus, textarea:focus { outline: 3px solid #bfd4ff; border-color: var(--primary); }
 
     input[type="checkbox"] {
       width: auto;
@@ -92,19 +109,50 @@
     }
 
     .button-secondary { background: #4b5563; }
+    .button-danger { background: var(--danger); }
+    .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 16px; padding: 12px 0; border-bottom: 1px solid var(--border); }
+    .topbar nav { display: flex; flex-wrap: wrap; gap: 6px; }
+    .topbar a { color: var(--primary); font-weight: 700; text-decoration: none; padding: 6px 8px; border-radius: 6px; }
+    .topbar a:hover { background: #eaf0ff; }
+    .action-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .action-row .button-link { margin-top: 0; }
+    .section-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 14px; margin-bottom: 12px; }
+    .section-head h2 { margin-bottom: 0; }
+    .filter-grid { display: grid; grid-template-columns: minmax(220px, 360px); gap: 8px; align-items: end; }
+    .stat-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+    .stat-card { display: grid; gap: 6px; min-height: 92px; padding: 14px; border: 1px solid var(--border); border-radius: 8px; background: #fbfcfe; color: inherit; text-decoration: none; }
+    .stat-card strong { font-size: 1.45rem; line-height: 1; }
+    .stat-card span { color: var(--muted); }
+    .list-links { display: grid; gap: 10px; }
+    .list-link { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid #e3e8ee; color: inherit; text-decoration: none; }
+    .list-link:hover strong { color: var(--primary); }
+    .list-link:last-child { border-bottom: 0; }
+    .empty-state { padding: 14px; border: 1px dashed var(--border); border-radius: 8px; background: var(--surface-2); color: var(--muted); }
+    .checklist { display: grid; gap: 8px; padding: 0; margin: 0; list-style: none; }
+    .checklist label { display: flex; gap: 8px; align-items: flex-start; margin: 0; font-weight: 500; }
     .messages { list-style: none; padding: 0; margin: 0 0 12px; }
     .messages li { padding: 10px 12px; border-radius: 6px; margin: 8px 0; background: #e8f0fe; }
     .errorlist { color: var(--danger); padding-left: 18px; }
     details { margin-top: 12px; border-top: 1px solid #edf0f3; padding-top: 12px; }
     summary { cursor: pointer; font-weight: 700; }
 
-    table { width: 100%; border-collapse: collapse; }
+    .table-wrap { width: 100%; overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; min-width: 620px; }
     th, td { text-align: left; border-bottom: 1px solid #e3e8ee; padding: 10px 8px; vertical-align: top; }
+    th { color: var(--muted); font-size: .9rem; font-weight: 700; }
+    tbody tr:hover { background: var(--surface-2); }
+    .cell-actions { min-width: 170px; }
 
     @media (max-width: 560px) {
       main { padding: 10px; }
+      h1 { font-size: 1.55rem; }
       .panel { padding: 14px; margin: 10px 0; }
       .meta-row { display: grid; gap: 2px; }
+      .topbar { display: grid; }
+      .topbar a { padding: 8px 6px; }
+      .list-link { display: grid; }
+      .section-head { display: grid; }
+      .filter-grid { grid-template-columns: 1fr; }
     }
   </style>
 </head>

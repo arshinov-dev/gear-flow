@@ -1,0 +1,64 @@
+{% extends "inventory/work/base.html" %}
+
+{% block title %}Просрочки{% endblock %}
+
+{% block work_content %}
+  <section class="panel hero">
+    <h1>Просрочки</h1>
+    <p class="muted">Предметы, у которых дата возврата уже прошла.</p>
+  </section>
+
+  <section class="panel">
+    <form method="get">
+      <div class="filter-grid">
+        <div>
+          <label for="holder">Кто взял</label>
+          <select id="holder" name="holder" onchange="this.form.submit()">
+            <option value="">Все</option>
+            {% for holder in holders %}
+              <option value="{{ holder.pk }}"{% if holder_id == holder.pk|stringformat:"s" %} selected{% endif %}>{{ holder.name }}</option>
+            {% endfor %}
+          </select>
+          <p class="help-text">Список показывает только людей, у которых есть активные просрочки.</p>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="section-head">
+      <h2>Список просрочек</h2>
+      {% if rows %}
+        <span class="badge badge-danger">{{ rows|length }}</span>
+      {% else %}
+        <span class="badge badge-ok">чисто</span>
+      {% endif %}
+    </div>
+    {% if rows %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Предмет</th>
+              <th>Кто взял</th>
+              <th>Вернуть до</th>
+              <th>Дней</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in rows %}
+              <tr>
+                <td><strong>{{ row.state.item.item_id }}</strong> · {{ row.state.item.name }}</td>
+                <td>{{ row.state.holder.name }}</td>
+                <td>{{ row.state.due_on }}</td>
+                <td><span class="badge badge-danger">{{ row.days_overdue }}</span></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="empty-state">Просрочек нет.</p>
+    {% endif %}
+  </section>
+{% endblock %}

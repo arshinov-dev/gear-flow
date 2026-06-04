@@ -1,0 +1,51 @@
+{% extends "inventory/work/base.html" %}
+
+{% block title %}Аудит: {{ holder.name }}{% endblock %}
+
+{% block work_content %}
+  <section class="panel hero">
+    <p class="muted">Аудит места</p>
+    <h1>{{ holder.name }}</h1>
+  </section>
+
+  <section class="panel">
+    <div class="section-head">
+      <div>
+        <h2>Что найдено</h2>
+        <p class="help-text">Снимите галочку с предмета, если его физически нет на месте.</p>
+      </div>
+    </div>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+
+      {{ form.observed_items.errors }}
+      {{ form.observed_items.label_tag }}
+      {% if expected_count %}
+        <ul class="checklist">
+          {% for checkbox in form.observed_items %}
+            <li>{{ checkbox }}</li>
+          {% endfor %}
+        </ul>
+      {% else %}
+        <p class="empty-state">На этом месте по системе нет оборудования.</p>
+      {% endif %}
+
+      {{ form.unexpected_item_ids.errors }}
+      {{ form.unexpected_item_ids.label_tag }}
+      {{ form.unexpected_item_ids }}
+      {% if form.unexpected_item_ids.help_text %}
+        <p class="help-text">{{ form.unexpected_item_ids.help_text }}</p>
+      {% endif %}
+
+      {{ form.comment.errors }}
+      {{ form.comment.label_tag }}
+      {{ form.comment }}
+
+      <div class="action-row">
+        <button type="submit">Записать аудит</button>
+        <a class="button-link button-secondary" href="{% url 'inventory:work_audit_locations' %}">Назад</a>
+      </div>
+    </form>
+  </section>
+{% endblock %}

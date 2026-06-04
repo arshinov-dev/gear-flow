@@ -1,0 +1,73 @@
+{% extends "admin/base_site.html" %}
+
+{% block extrastyle %}
+  {{ block.super }}
+  <style>
+    .print-actions {
+      margin: 0 0 16px;
+    }
+
+    .qr-label {
+      width: 38mm;
+      min-height: 34mm;
+      box-sizing: border-box;
+      border: 1px dashed #9aa4b2;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 3mm;
+      background: #fff;
+    }
+
+    .qr-label img {
+      width: 22mm;
+      height: 22mm;
+      display: block;
+    }
+
+    .qr-label strong {
+      display: block;
+      margin-top: 1mm;
+      font: 700 8pt/1.1 system-ui, sans-serif;
+      color: #111827;
+    }
+
+    .qr-label span {
+      display: block;
+      margin-top: 1mm;
+      max-width: 32mm;
+      overflow-wrap: anywhere;
+      text-align: center;
+      font: 6pt/1.15 system-ui, sans-serif;
+      color: #374151;
+    }
+
+    @media print {
+      #header,
+      .breadcrumbs,
+      .print-actions,
+      .object-tools {
+        display: none !important;
+      }
+
+      #content {
+        margin: 0;
+        padding: 0;
+      }
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+  <div class="print-actions">
+    <button type="button" class="button default" onclick="window.print()">Печать</button>
+    <a href="{% url 'admin:inventory_assetkit_change' kit.pk %}" class="button">Вернуться к комплекту</a>
+  </div>
+
+  <div class="qr-label">
+    <img src="{{ data_uri }}" alt="{{ qr_code.label_text }}">
+    <strong>{{ qr_code.label_text }}</strong>
+    <span>{{ kit.name }}</span>
+  </div>
+{% endblock %}

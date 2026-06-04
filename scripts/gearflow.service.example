@@ -1,0 +1,15 @@
+[Unit]
+Description=Gear Flow Django application
+After=network.target postgresql.service
+
+[Service]
+User=gearflow
+Group=www-data
+WorkingDirectory=/opt/gear-flow
+EnvironmentFile=/opt/gear-flow/.env
+ExecStart=/opt/gear-flow/.venv/bin/gunicorn gearflow.wsgi:application --bind 127.0.0.1:8001 --workers 3 --timeout 60 --access-logfile - --error-logfile -
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

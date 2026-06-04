@@ -14,7 +14,13 @@ class Person(models.Model):
 
     display_name = models.CharField("имя", max_length=160)
     email = models.EmailField("почта", blank=True)
-    role = models.CharField("роль", max_length=32, choices=Role.choices, default=Role.MEMBER)
+    role = models.CharField(
+        "роль",
+        max_length=32,
+        choices=Role.choices,
+        default=Role.MEMBER,
+        help_text="Роль участника для QR-сценариев. Вход в админку управляется отдельно в разделе пользователей Django.",
+    )
     pin_hash = models.CharField("PIN-хеш", max_length=256)
     pin_updated_at = models.DateTimeField("PIN обновлен", null=True, blank=True)
     pin_reset_required = models.BooleanField("нужно сбросить PIN", default=False)
@@ -24,8 +30,8 @@ class Person(models.Model):
 
     class Meta:
         ordering = ["display_name"]
-        verbose_name = "человек"
-        verbose_name_plural = "люди"
+        verbose_name = "участник"
+        verbose_name_plural = "участники"
 
     def __str__(self):
         return self.display_name
@@ -39,13 +45,17 @@ class Person(models.Model):
     def check_pin(self, raw_pin):
         return bool(raw_pin) and check_password(raw_pin, self.pin_hash)
 
+    @property
+    def can_manage_inventory(self):
+        return self.role in {self.Role.ADMIN, self.Role.INVENTORY_MANAGER}
+
 
 class Holder(models.Model):
     class Type(models.TextChoices):
-        PERSON = "person", "человек"
-        LOCATION = "location", "место"
+        PERSON = "person", "участник"
+        LOCATION = "location", "место хранения"
         EXTERNAL = "external", "внешний держатель"
-        RETIRED = "retired", "выведено из оборота"
+        RETIRED = "retired", "списано"
 
     holder_type = models.CharField("тип держателя", max_length=32, choices=Type.choices)
     name = models.CharField("название", max_length=160)
@@ -58,7 +68,11 @@ class Holder(models.Model):
         related_name="holder",
     )
     is_active = models.BooleanField("активен", default=True)
-    is_self_service_source = models.BooleanField("самовыдача по QR", default=False)
+    is_self_service_source = models.BooleanField(
+        "можно брать по QR",
+        default=False,
+        help_text="Если включено, оборудование из этого места можно взять самому через QR-страницу.",
+    )
     is_temporary = models.BooleanField("временный", default=False)
     starts_at = models.DateTimeField("начало", null=True, blank=True)
     ends_at = models.DateTimeField("окончание", null=True, blank=True)
@@ -76,8 +90,8 @@ class Holder(models.Model):
 
     class Meta:
         ordering = ["holder_type", "name"]
-        verbose_name = "держатель"
-        verbose_name_plural = "держатели"
+        verbose_name = "место или ответственный"
+        verbose_name_plural = "места и ответственные"
         constraints = [
             models.UniqueConstraint(
                 fields=["linked_person"],
@@ -194,6 +208,9 @@ class AssetItem(models.Model):
     def __str__(self):
         return f"{self.item_id} · {self.name}"
 
+    def delete(self, *args, **kwargs):
+        raise ValidationError("Оборудование нельзя удалять. Используйте списание.")
+
 
 class AssetQrCode(models.Model):
     class Status(models.TextChoices):
@@ -222,6 +239,87 @@ class AssetQrCode(models.Model):
                 fields=["item"],
                 condition=Q(status="active"),
                 name="one_active_qr_per_asset",
+            )
+        ]
+
+    def __str__(self):
+        return self.label_text
+
+
+class AssetKit(models.Model):
+    class Status(models.TextChoices):
+        ACTIVE = "active", "активен"
+        ARCHIVED = "archived", "в архиве"
+
+    kit_id = models.CharField("ID комплекта", max_length=32, primary_key=True, blank=True)
+    name = models.CharField("название", max_length=160)
+    description = models.TextField("описание", blank=True)
+    status = models.CharField("статус", max_length=16, choices=Status.choices, default=Status.ACTIVE)
+    created_at = models.DateTimeField("создан", auto_now_add=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="создал",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="created_asset_kits",
+    )
+    items = models.ManyToManyField(
+        AssetItem,
+        verbose_name="оборудование",
+        through="AssetKitItem",
+        related_name="kits",
+    )
+
+    class Meta:
+        ordering = ["kit_id"]
+        verbose_name = "комплект"
+        verbose_name_plural = "комплекты"
+
+    def __str__(self):
+        return f"{self.kit_id} · {self.name}"
+
+
+class AssetKitItem(models.Model):
+    kit = models.ForeignKey(AssetKit, verbose_name="комплект", on_delete=models.CASCADE, related_name="kit_items")
+    item = models.ForeignKey(AssetItem, verbose_name="оборудование", on_delete=models.PROTECT)
+    position_index = models.PositiveIntegerField("позиция", default=0)
+    note = models.CharField("заметка", max_length=160, blank=True)
+
+    class Meta:
+        ordering = ["position_index", "id"]
+        verbose_name = "предмет комплекта"
+        verbose_name_plural = "предметы комплекта"
+        constraints = [
+            models.UniqueConstraint(fields=["kit", "item"], name="unique_asset_in_kit"),
+        ]
+
+    def __str__(self):
+        return f"{self.kit}: {self.item}"
+
+
+class AssetKitQrCode(models.Model):
+    class Status(models.TextChoices):
+        ACTIVE = "active", "активен"
+        REVOKED = "revoked", "отозван"
+
+    code_value = models.CharField("значение QR", max_length=255, unique=True)
+    payload_url = models.CharField("ссылка", max_length=255)
+    label_text = models.CharField("надпись", max_length=80)
+    kit = models.ForeignKey(AssetKit, verbose_name="комплект", on_delete=models.CASCADE, related_name="qr_codes")
+    status = models.CharField("статус", max_length=16, choices=Status.choices, default=Status.ACTIVE)
+    created_at = models.DateTimeField("создан", auto_now_add=True)
+    revoked_at = models.DateTimeField("отозван", null=True, blank=True)
+
+    class Meta:
+        ordering = ["kit_id", "-created_at"]
+        verbose_name = "QR-код комплекта"
+        verbose_name_plural = "QR-коды комплектов"
+        constraints = [
+            models.UniqueConstraint(
+                fields=["kit"],
+                condition=Q(status="active"),
+                name="one_active_qr_per_kit",
             )
         ]
 
@@ -335,6 +433,13 @@ class AssetCurrentState(models.Model):
 
     def __str__(self):
         return f"{self.item_id}: {self.holder}"
+
+
+class OverdueAssetCurrentState(AssetCurrentState):
+    class Meta:
+        proxy = True
+        verbose_name = "просрочка"
+        verbose_name_plural = "просрочки"
 
 
 class AssetEventItem(models.Model):
@@ -459,6 +564,91 @@ class EventEvidence(models.Model):
     class Meta:
         verbose_name = "доказательство события"
         verbose_name_plural = "доказательства событий"
+
+
+class StockSku(models.Model):
+    sku_id = models.CharField(
+        "артикул / SKU",
+        max_length=32,
+        primary_key=True,
+        blank=True,
+        help_text="Можно оставить пустым: система выдаст код вроде SKU-001.",
+    )
+    name = models.CharField("название", max_length=160)
+    category = models.CharField("категория", max_length=80, blank=True)
+    unit = models.CharField("единица", max_length=24, default="шт")
+    is_active = models.BooleanField("активен", default=True)
+    created_at = models.DateTimeField("создан", auto_now_add=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        verbose_name="создал",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="created_stock_skus",
+    )
+
+    class Meta:
+        ordering = ["sku_id"]
+        verbose_name = "мерч"
+        verbose_name_plural = "мерч"
+
+    def __str__(self):
+        return f"{self.sku_id} · {self.name}"
+
+
+class StockBalance(models.Model):
+    sku = models.ForeignKey(StockSku, verbose_name="мерч", on_delete=models.CASCADE, related_name="balances")
+    holder = models.ForeignKey(
+        Holder,
+        verbose_name="место или ответственный",
+        on_delete=models.PROTECT,
+        related_name="stock_balances",
+    )
+    quantity = models.PositiveIntegerField("количество", default=0)
+    updated_at = models.DateTimeField("обновлено", auto_now=True)
+
+    class Meta:
+        ordering = ["sku_id", "holder__name"]
+        verbose_name = "остаток мерча"
+        verbose_name_plural = "остатки мерча"
+        constraints = [
+            models.UniqueConstraint(fields=["sku", "holder"], name="unique_stock_balance_per_holder"),
+        ]
+
+    def __str__(self):
+        return f"{self.sku} · {self.holder}: {self.quantity}"
+
+
+class StockEventItem(models.Model):
+    event = models.ForeignKey(EventLog, verbose_name="событие", on_delete=models.PROTECT, related_name="stock_items")
+    sku = models.ForeignKey(StockSku, verbose_name="мерч", on_delete=models.PROTECT, related_name="event_items")
+    from_holder = models.ForeignKey(
+        Holder,
+        verbose_name="откуда",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="stock_events_from",
+    )
+    to_holder = models.ForeignKey(
+        Holder,
+        verbose_name="куда",
+        null=True,
+        blank=True,
+        on_delete=models.PROTECT,
+        related_name="stock_events_to",
+    )
+    quantity = models.PositiveIntegerField("количество")
+    note = models.TextField("заметка", blank=True)
+
+    class Meta:
+        verbose_name = "строка события мерча"
+        verbose_name_plural = "строки событий мерча"
+        indexes = [models.Index(fields=["sku"])]
+
+    def __str__(self):
+        return f"{self.sku} · {self.quantity}"
 
 
 def validate_pin(raw_pin):

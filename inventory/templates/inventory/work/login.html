@@ -1,0 +1,33 @@
+{% extends "inventory/base.html" %}
+
+{% block title %}Рабочий кабинет{% endblock %}
+
+{% block content %}
+  <section class="panel hero">
+    <h1>Рабочий кабинет</h1>
+    <p class="muted">Вход для администратора или ответственного за учет.</p>
+  </section>
+
+  <section class="panel">
+    <div class="section-head">
+      <div>
+        <h2>Вход</h2>
+        <p class="help-text">Доступ есть у людей с ролью администратора или ответственного за учет.</p>
+      </div>
+    </div>
+    <form method="post" novalidate>
+      {% csrf_token %}
+      {{ form.non_field_errors }}
+
+      {{ form.person.errors }}
+      {{ form.person.label_tag }}
+      {{ form.person }}
+
+      {{ form.pin.errors }}
+      {{ form.pin.label_tag }}
+      {{ form.pin }}
+
+      <button type="submit">Войти</button>
+    </form>
+  </section>
+{% endblock %}

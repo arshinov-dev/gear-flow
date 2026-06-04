@@ -1,0 +1,82 @@
+{% extends "inventory/work/base.html" %}
+
+{% block title %}Оборудование{% endblock %}
+
+{% block work_content %}
+  <section class="panel hero">
+    <h1>Оборудование</h1>
+    <p class="muted">Текущее место, статус и быстрые действия по жизненному циклу.</p>
+  </section>
+
+  <section class="panel">
+    <form method="get">
+      <div class="filter-grid">
+        <div>
+          <label for="status">Статус</label>
+          <select id="status" name="status" onchange="this.form.submit()">
+            <option value="">Все</option>
+            {% for value, label in status_choices %}
+              <option value="{{ value }}"{% if status == value %} selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+          <p class="help-text">Фильтр не меняет данные, только сужает список ниже.</p>
+        </div>
+      </div>
+    </form>
+  </section>
+
+  <section class="panel">
+    <div class="section-head">
+      <h2>Список оборудования</h2>
+      {% if status %}
+        <span class="badge badge-info">Фильтр включен</span>
+      {% endif %}
+    </div>
+    {% if states %}
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Название</th>
+              <th>Где сейчас</th>
+              <th>Состояние</th>
+              <th>Статус</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for state in states %}
+              <tr>
+                <td><strong>{{ state.item.item_id }}</strong></td>
+                <td>{{ state.item.name }}</td>
+                <td>{{ state.holder.name }}</td>
+                <td>
+                  {% if state.condition == "working" %}
+                    <span class="badge badge-ok">{{ state.get_condition_display }}</span>
+                  {% elif state.condition == "needs_attention" or state.condition == "unknown" %}
+                    <span class="badge badge-warning">{{ state.get_condition_display }}</span>
+                  {% else %}
+                    <span class="badge badge-danger">{{ state.get_condition_display }}</span>
+                  {% endif %}
+                </td>
+                <td>
+                  {% if state.lifecycle_status == "active" %}
+                    <span class="badge badge-ok">{{ state.get_lifecycle_status_display }}</span>
+                  {% elif state.lifecycle_status == "repair" %}
+                    <span class="badge badge-warning">{{ state.get_lifecycle_status_display }}</span>
+                  {% else %}
+                    <span class="badge badge-danger">{{ state.get_lifecycle_status_display }}</span>
+                  {% endif %}
+                </td>
+                <td class="cell-actions"><a href="{% url 'inventory:work_asset_action' state.item.item_id %}">Действие</a></td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="empty-state">Оборудование не найдено.</p>
+    {% endif %}
+  </section>
+{% endblock %}

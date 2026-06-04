@@ -1,0 +1,50 @@
+{% extends "inventory/work/base.html" %}
+
+{% block title %}Рабочий кабинет{% endblock %}
+
+{% block work_content %}
+  <section class="panel hero">
+    <h1>Рабочий кабинет</h1>
+    <p class="muted">Вы вошли как {{ manager.display_name }}</p>
+  </section>
+
+  <section class="panel">
+    <div class="section-head">
+      <div>
+        <h2>Основные разделы</h2>
+        <p class="help-text">Рабочий кабинет нужен для ежедневных действий без перехода в Django admin.</p>
+      </div>
+      {% if overdue_count %}
+        <span class="badge badge-danger">{{ overdue_count }} просрочено</span>
+      {% else %}
+        <span class="badge badge-ok">Просрочек нет</span>
+      {% endif %}
+    </div>
+    <div class="list-links">
+      <a class="list-link" href="{% url 'inventory:work_assets' %}">
+        <strong>Оборудование</strong>
+        <span class="muted">{{ assets_count }} предметов</span>
+      </a>
+      <a class="list-link" href="{% url 'inventory:work_kits' %}">
+        <strong>Комплекты</strong>
+        <span class="muted">{{ kits_count }} активных</span>
+      </a>
+      <a class="list-link" href="{% url 'inventory:work_audit_locations' %}">
+        <strong>Аудит оборудования</strong>
+        <span class="muted">{{ locations_count }} мест</span>
+      </a>
+      <a class="list-link" href="{% url 'inventory:work_stock' %}">
+        <strong>Мерч</strong>
+        <span class="muted">{{ stock_count }} SKU</span>
+      </a>
+      <a class="list-link" href="{% url 'inventory:work_overdue' %}">
+        <strong>Просрочки</strong>
+        {% if overdue_count %}
+          <span class="badge badge-danger">{{ overdue_count }}</span>
+        {% else %}
+          <span class="muted">нет</span>
+        {% endif %}
+      </a>
+    </div>
+  </section>
+{% endblock %}
