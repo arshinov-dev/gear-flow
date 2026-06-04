@@ -1,63 +1,62 @@
 # Gear Flow
 
-Gear Flow - веб-система учета оборудования, комплектов и мерча для медиацентра.
+Система учета оборудования, комплектов и мерча для медиацентра.
 
-## Что внутри
+## Главное
 
-- QR-выдача и возврат оборудования.
-- Выдача комплектов одним QR, например стойка + свет + кабель.
-- Рабочий кабинет `/work/` для ответственных за учет.
-- Аудит мест хранения и экран просрочек.
-- Учет мерча без QR: остатки, поступления, перемещения, выдачи и корректировки.
-- Django admin для настройки справочников, людей, ролей, мест, оборудования и SKU.
+Подробная рабочая инструкция: [docs/OPERATIONS.md](docs/OPERATIONS.md)
 
-## Быстрый локальный запуск
+## Быстрая разработка
 
 ```bash
-python3 -m venv .venv
-.venv/bin/pip install -r requirements.txt
-.venv/bin/python manage.py migrate
-.venv/bin/python manage.py createsuperuser
-.venv/bin/python manage.py runserver 127.0.0.1:8000 --noreload
+bash scripts/dev.sh
 ```
 
-Адреса:
+Открыть:
 
-- рабочий кабинет: `http://127.0.0.1:8000/work/`
-- админка: `http://127.0.0.1:8000/admin/`
+```text
+http://127.0.0.1:8000/work/
+```
 
-Если `POSTGRES_DB` не задан, проект использует SQLite. Для разработки это нормально.
+## Быстрая установка на Ubuntu
 
-## Первый сценарий
-
-1. Войдите в админку.
-2. Создайте людей в `Люди`: каждому задается PIN и роль.
-3. Создайте места хранения в `Места и держатели`.
-4. Откройте `Оборудование` и нажмите `Зарегистрировать оборудование`.
-5. Распечатайте QR-наклейки.
-6. Сканируйте QR телефоном и выдавайте или возвращайте предметы.
-
-## Важные документы
-
-- [Разработка на macOS, Linux и Windows](docs/DEVELOPMENT.md)
-- [Production-развертывание на Ubuntu в Hyper-V](docs/DEPLOYMENT_UBUNTU_HYPERV.md)
-- [Бэкапы и восстановление](docs/BACKUP_AND_RESTORE.md)
-
-## QR URL
-
-QR-код хранит абсолютную ссылку. Для работы с телефона в локальной сети задайте адрес сервера в `.env`:
+Если код уже лежит на сервере:
 
 ```bash
-GEARFLOW_PUBLIC_BASE_URL=http://192.168.1.10
+cd /opt/gear-flow
+bash scripts/prod-install.sh
 ```
 
-Если запускаете dev-сервер напрямую на порту `8000`, укажите порт:
+Если нужно сразу скачать из Git:
 
 ```bash
-GEARFLOW_PUBLIC_BASE_URL=http://192.168.1.10:8000
+sudo apt update && sudo apt install -y git && sudo git clone <repo-url> /opt/gear-flow && sudo chown -R "$USER":"$USER" /opt/gear-flow && cd /opt/gear-flow && bash scripts/prod-install.sh
 ```
 
-## Проверки
+## Обновление сервера
+
+```bash
+cd /opt/gear-flow
+bash scripts/prod-update.sh
+```
+
+## Ручной backup
+
+```bash
+cd /opt/gear-flow
+bash scripts/backup.sh manual
+```
+
+Автоматический backup ставится при `prod-install.sh` и запускается каждый день в `03:00`.
+
+## Восстановление
+
+```bash
+cd /opt/gear-flow
+RESTORE_ENV=1 bash scripts/restore.sh /path/to/gearflow_backup_YYYYMMDD_HHMMSS_manual.tar.gz
+```
+
+## Проверки разработки
 
 ```bash
 .venv/bin/python manage.py check

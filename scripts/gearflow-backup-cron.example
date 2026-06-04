@@ -1,4 +1,4 @@
 # Run as the Linux user that owns the Gear Flow project.
 # Edit paths before installing with: crontab scripts/gearflow-backup-cron.example
 
-0 3 * * * bash /opt/gear-flow/scripts/gearflow-backup-full.example.sh >> /var/log/gearflow-backup.log 2>&1
+0 3 * * * cd /opt/gear-flow && bash scripts/backup.sh auto >> /var/log/gearflow-backup.log 2>&1
