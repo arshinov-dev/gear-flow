@@ -57,8 +57,8 @@ else
   echo "WARN env: .env is missing; prod-install.sh will create it."
 fi
 
-if command -v docker >/dev/null 2>&1 || sudo -n docker version >/dev/null 2>&1; then
-  if docker compose version >/dev/null 2>&1; then
+if command -v docker >/dev/null 2>&1 && (docker info >/dev/null 2>&1 || sudo -n docker info >/dev/null 2>&1); then
+  if docker info >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
     docker compose config >/dev/null
   else
     sudo docker compose config >/dev/null

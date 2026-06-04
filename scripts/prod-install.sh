@@ -26,6 +26,10 @@ EOF
   sudo apt install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
 }
 
+ensure_docker_running() {
+  sudo systemctl enable --now docker >/dev/null 2>&1 || true
+}
+
 write_env_if_missing() {
   if [ -f ".env" ]; then
     return
@@ -71,6 +75,7 @@ EOF
 }
 
 install_docker
+ensure_docker_running
 write_env_if_missing
 validate_env
 

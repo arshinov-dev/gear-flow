@@ -6,7 +6,7 @@ APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$APP_DIR"
 
 compose() {
-  if docker compose version >/dev/null 2>&1; then
+  if docker info >/dev/null 2>&1 && docker compose version >/dev/null 2>&1; then
     docker compose "$@"
   else
     sudo docker compose "$@"
