@@ -10,7 +10,11 @@ if [ -z "$archive" ] || [ ! -f "$archive" ]; then
   exit 1
 fi
 
-load_env
+if [ "${RESTORE_ENV:-0}" != "1" ]; then
+  validate_env
+else
+  load_env
+fi
 
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
@@ -19,31 +23,24 @@ tar -xzf "$archive" -C "$tmp_dir"
 
 if [ "${RESTORE_ENV:-0}" = "1" ]; then
   cp "$tmp_dir/env" .env
-  load_env
+  validate_env
   compose down -v >/dev/null 2>&1 || true
 fi
 
 compose up -d db >/dev/null
 compose stop nginx web >/dev/null 2>&1 || true
 
-compose exec -T -e PGPASSWORD="${POSTGRES_PASSWORD:-}" db dropdb \
-  --username="${POSTGRES_USER:-gearflow}" \
-  --if-exists \
-  "${POSTGRES_DB:-gearflow}"
+compose exec -T db sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" dropdb --host=127.0.0.1 --username="$POSTGRES_USER" --if-exists "$POSTGRES_DB"'
 
-compose exec -T -e PGPASSWORD="${POSTGRES_PASSWORD:-}" db createdb \
-  --username="${POSTGRES_USER:-gearflow}" \
-  "${POSTGRES_DB:-gearflow}"
+compose exec -T db sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" createdb --host=127.0.0.1 --username="$POSTGRES_USER" "$POSTGRES_DB"'
 
-compose exec -T -e PGPASSWORD="${POSTGRES_PASSWORD:-}" db pg_restore \
-  --username="${POSTGRES_USER:-gearflow}" \
-  --dbname="${POSTGRES_DB:-gearflow}" \
+compose exec -T db sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" pg_restore --host=127.0.0.1 --username="$POSTGRES_USER" --dbname="$POSTGRES_DB"' \
   < "$tmp_dir/database.dump"
 
-compose run --rm --no-deps -T web sh -c 'rm -rf /app/media && mkdir -p /app && tar -C /app -xzf -' < "$tmp_dir/media.tar.gz"
+compose run --rm --no-deps --entrypoint sh -T web -c 'mkdir -p /app/media && find /app/media -mindepth 1 -depth -exec rm -rf {} + && tar -C /app -xzf -' < "$tmp_dir/media.tar.gz"
 
-compose run --rm web python manage.py migrate
-compose run --rm web python manage.py collectstatic --noinput
+django_run migrate
+django_run collectstatic --noinput
 compose up -d
 
 echo "Restore complete."

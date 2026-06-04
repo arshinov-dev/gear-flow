@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-APP_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-cd "$APP_DIR"
+# shellcheck disable=SC1091
+source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_lib.sh"
 
 install_docker() {
   if command -v docker >/dev/null 2>&1 && (docker compose version >/dev/null 2>&1 || sudo docker compose version >/dev/null 2>&1); then
@@ -59,14 +59,6 @@ PY
 fi
 }
 
-compose_cmd() {
-  if docker compose version >/dev/null 2>&1; then
-    docker compose "$@"
-  else
-    sudo docker compose "$@"
-  fi
-}
-
 install_cron() {
   local cron_file="/etc/cron.d/gearflow-backup"
   local log_file="/var/log/gearflow-backup.log"
@@ -81,16 +73,17 @@ EOF
 
 install_docker
 write_env_if_missing
+validate_env
 
 mkdir -p backups
-compose_cmd build
-compose_cmd up -d db
-compose_cmd run --rm web python manage.py migrate
-compose_cmd run --rm web python manage.py collectstatic --noinput
-compose_cmd up -d
+compose build
+compose up -d db
+django_run migrate
+django_run collectstatic --noinput
+compose up -d
 
-if [ "$(compose_cmd exec -T web python manage.py shell -c 'from django.contrib.auth import get_user_model; print(get_user_model().objects.filter(is_superuser=True).exists())')" = "False" ]; then
-  compose_cmd exec web python manage.py createsuperuser
+if [ "$(compose exec -T web python manage.py shell -c 'from django.contrib.auth import get_user_model; print(get_user_model().objects.filter(is_superuser=True).exists())')" = "False" ]; then
+  compose exec web python manage.py createsuperuser
 fi
 
 install_cron

@@ -4,7 +4,7 @@ set -euo pipefail
 # shellcheck disable=SC1091
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_lib.sh"
 
-load_env
+validate_env
 
 bash scripts/backup.sh before-update
 
@@ -18,8 +18,8 @@ fi
 
 compose build
 compose up -d db
-compose run --rm web python manage.py migrate
-compose run --rm web python manage.py collectstatic --noinput
+django_run migrate
+django_run collectstatic --noinput
 compose up -d
 compose ps
 

@@ -4,27 +4,32 @@ set -euo pipefail
 # shellcheck disable=SC1091
 source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/_lib.sh"
 
-load_env
+validate_env
 
-label="${1:-manual}"
+label="$(printf '%s' "${1:-manual}" | tr -c 'A-Za-z0-9._-' '_')"
 timestamp="$(date +%Y%m%d_%H%M%S)"
 backup_dir="${GEARFLOW_BACKUP_DIR:-./backups}"
 keep="${GEARFLOW_BACKUP_KEEP:-7}"
 archive_name="gearflow_backup_${timestamp}_${label}.tar.gz"
+lock_file="${GEARFLOW_BACKUP_LOCK_FILE:-/tmp/gearflow-backup.lock}"
 
 mkdir -p "$backup_dir"
+chown_to_app_owner "$backup_dir"
 tmp_dir="$(mktemp -d)"
 trap 'rm -rf "$tmp_dir"' EXIT
 
+exec 9>"$lock_file"
+if ! flock -n 9; then
+  echo "Backup is already running."
+  exit 1
+fi
+
 compose up -d db >/dev/null
 
-compose exec -T db pg_dump \
-  --username="${POSTGRES_USER:-gearflow}" \
-  --dbname="${POSTGRES_DB:-gearflow}" \
-  --format=custom \
+compose exec -T db sh -c 'PGPASSWORD="$POSTGRES_PASSWORD" pg_dump --host=127.0.0.1 --username="$POSTGRES_USER" --dbname="$POSTGRES_DB" --format=custom' \
   > "$tmp_dir/database.dump"
 
-compose run --rm --no-deps -T web tar -C /app -czf - media > "$tmp_dir/media.tar.gz"
+compose run --rm --no-deps --entrypoint sh -T web -c 'tar -C /app -czf - media' > "$tmp_dir/media.tar.gz"
 
 cp .env "$tmp_dir/env"
 cat > "$tmp_dir/metadata.txt" <<EOF
@@ -35,14 +40,6 @@ postgres_db=${POSTGRES_DB:-gearflow}
 EOF
 
 tar -C "$tmp_dir" -czf "$backup_dir/$archive_name" database.dump media.tar.gz env metadata.txt
-
-prune_dir() {
-  local dir="$1"
-  find "$dir" -maxdepth 1 -name 'gearflow_backup_*.tar.gz' -type f -printf '%T@ %p\n' \
-    | sort -rn \
-    | awk "NR>${keep}{print \$2}" \
-    | xargs -r rm --
-}
 
 mirror_archive() {
   local archive="$1"
@@ -64,12 +61,13 @@ mirror_archive() {
     fi
     mkdir -p "$mirror_dir"
     cp "$archive" "$mirror_dir/"
-    prune_dir "$mirror_dir"
+    prune_backups "$mirror_dir" "$keep"
     echo "Mirrored backup to: $mirror_dir/$(basename "$archive")"
   done
 }
 
-prune_dir "$backup_dir"
+chown_to_app_owner "$backup_dir/$archive_name"
+prune_backups "$backup_dir" "$keep"
 mirror_archive "$backup_dir/$archive_name"
 
 echo "Backup created: $backup_dir/$archive_name"

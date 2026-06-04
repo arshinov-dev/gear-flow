@@ -178,6 +178,16 @@ Docker убирает большую часть ручной настройки:
 
 Важно: Docker не заменяет backup. Volume может потеряться вместе с VM, поэтому `backup.sh` обязателен.
 
+## 8. Как устроен Docker в проекте
+
+- `compose.yaml` - три сервиса: `db`, `web`, `nginx`.
+- `Dockerfile` - Python-приложение под Gunicorn, запускается не от root.
+- `docker/nginx.conf` - Nginx отдает `/static/`, `/media/` и проксирует Django.
+- `docker/entrypoint.sh` - ждет PostgreSQL перед запуском приложения.
+- `postgres_data`, `media_data`, `static_data` - Docker volumes с постоянными данными.
+
+Миграции не спрятаны внутрь автозапуска контейнера. Их явно выполняют `prod-install.sh`, `prod-update.sh` и `restore.sh`, чтобы обновление было управляемым.
+
 ## Полезные команды
 
 Статус:
