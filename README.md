@@ -24,6 +24,7 @@ http://127.0.0.1:8000/work/
 
 ```bash
 cd /opt/gear-flow
+bash scripts/doctor.sh
 bash scripts/prod-install.sh
 ```
 
@@ -37,6 +38,7 @@ sudo apt update && sudo apt install -y git && sudo git clone <repo-url> /opt/gea
 
 ```bash
 cd /opt/gear-flow
+bash scripts/doctor.sh
 bash scripts/prod-update.sh
 ```
 

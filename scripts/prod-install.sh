@@ -50,13 +50,12 @@ replacements = {
     "DJANGO_ALLOWED_HOSTS=192.168.1.10,127.0.0.1,localhost": f"DJANGO_ALLOWED_HOSTS={ip},127.0.0.1,localhost",
     "DJANGO_CSRF_TRUSTED_ORIGINS=http://192.168.1.10": f"DJANGO_CSRF_TRUSTED_ORIGINS=http://{ip}",
     "GEARFLOW_PUBLIC_BASE_URL=http://192.168.1.10": f"GEARFLOW_PUBLIC_BASE_URL=http://{ip}",
-    "GEARFLOW_BACKUP_DIR=/mnt/external/gearflow-backups": "GEARFLOW_BACKUP_DIR=./backups",
+    "GEARFLOW_BACKUP_DIR=./backups": "GEARFLOW_BACKUP_DIR=./backups",
 }
 for old, new in replacements.items():
     text = text.replace(old, new)
 path.write_text(text)
 PY
-fi
 }
 
 install_cron() {

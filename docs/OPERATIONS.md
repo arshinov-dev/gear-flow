@@ -45,6 +45,7 @@ sudo apt update && sudo apt install -y git && sudo git clone <repo-url> /opt/gea
 
 ```bash
 cd /opt/gear-flow
+bash scripts/doctor.sh
 bash scripts/prod-install.sh
 ```
 
@@ -72,6 +73,7 @@ http://IP_UBUNTU/admin/
 
 ```bash
 cd /opt/gear-flow
+bash scripts/doctor.sh
 bash scripts/prod-update.sh
 ```
 
@@ -87,7 +89,7 @@ bash scripts/prod-update.sh
 То есть обычный порядок после завершения разработки такой:
 
 ```text
-закоммитил изменения -> на Ubuntu запустил bash scripts/prod-update.sh
+закоммитил изменения -> на Ubuntu запустил doctor.sh -> prod-update.sh
 ```
 
 ## 4. Бэкапы: ручной и автоматический

@@ -11,15 +11,18 @@ timestamp="$(date +%Y%m%d_%H%M%S)"
 backup_dir="${GEARFLOW_BACKUP_DIR:-./backups}"
 keep="${GEARFLOW_BACKUP_KEEP:-7}"
 archive_name="gearflow_backup_${timestamp}_${label}.tar.gz"
-lock_file="${GEARFLOW_BACKUP_LOCK_FILE:-/tmp/gearflow-backup.lock}"
+lock_dir="${GEARFLOW_BACKUP_LOCK_DIR:-$backup_dir/.gearflow-backup.lock}"
 
 mkdir -p "$backup_dir"
 chown_to_app_owner "$backup_dir"
 tmp_dir="$(mktemp -d)"
-trap 'rm -rf "$tmp_dir"' EXIT
+cleanup() {
+  rm -rf "$tmp_dir"
+  rmdir "$lock_dir" 2>/dev/null || true
+}
+trap cleanup EXIT
 
-exec 9>"$lock_file"
-if ! flock -n 9; then
+if ! mkdir "$lock_dir" 2>/dev/null; then
   echo "Backup is already running."
   exit 1
 fi
